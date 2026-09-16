@@ -59,18 +59,11 @@ def auto_tags(name: str) -> list[str]:
 
 
 def enrich_item(item: dict) -> dict:
-    """为单条数据补全 tags 字段（保留已有手工标签并合并自动标签）。"""
+    """已有标签则保留；没有标签时再自动打标。"""
     out = dict(item)
-    auto = auto_tags(str(out.get("name") or ""))
     manual = out.get("tags")
-    if isinstance(manual, list) and manual:
-        merged: list[str] = []
-        seen: set[str] = set()
-        for tag in [*manual, *auto]:
-            if isinstance(tag, str) and tag and tag not in seen:
-                seen.add(tag)
-                merged.append(tag)
-        out["tags"] = merged
+    if isinstance(manual, list) and any(isinstance(t, str) and t.strip() for t in manual):
+        out["tags"] = [t.strip() for t in manual if isinstance(t, str) and t.strip()]
     else:
-        out["tags"] = auto
+        out["tags"] = auto_tags(str(out.get("name") or ""))
     return out
