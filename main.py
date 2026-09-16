@@ -1,14 +1,16 @@
-"""常州美食排行榜 — Flask API + Vue 前端"""
+"""常州美食排行榜 — Flask API（默认 8999）"""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 
-DATA_PATH = Path(__file__).parent / "data" / "restaurants.json"
+BASE_DIR = Path(__file__).parent
+DATA_PATH = BASE_DIR / "data" / "restaurants.json"
 TITLE = "常州美食排行榜"
+API_PORT = 8999
 
 app = Flask(__name__)
 
@@ -20,9 +22,24 @@ def load_restaurants() -> list[dict]:
     return items
 
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    return response
+
+
 @app.get("/")
 def index():
-    return render_template("index.html")
+    return jsonify(
+        {
+            "service": "Taste-Chang API",
+            "port": API_PORT,
+            "frontend": "http://127.0.0.1:9000",
+            "api": "/api/restaurants",
+        }
+    )
 
 
 @app.get("/api/restaurants")
@@ -35,4 +52,4 @@ def api_restaurants():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=9000, debug=False)
+    app.run(host="0.0.0.0", port=API_PORT, debug=False)
